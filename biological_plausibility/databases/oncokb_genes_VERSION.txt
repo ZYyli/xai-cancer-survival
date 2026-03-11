@@ -1,0 +1,3 @@
+Generated: 2025-12-03 13:37:39
+Source: https://www.oncokb.org/api/v1/utils/allCuratedGenes
+Description: OncoKB curated genes downloaded via official API

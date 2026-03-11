@@ -1,0 +1,7 @@
+Generated: 2025-12-03 13:50:00
+Source: https://zenodo.org/api/records/16849846/files/cancermine_collated.tsv/content
+Description: CancerMine collated data - literature-mined cancer gene associations
+Roles: Driver, Oncogene, Tumor_Suppressor
+Total records: 38204
+Zenodo Record ID: 16849846
+Publication Date: 2025-08-13 (Latest version)

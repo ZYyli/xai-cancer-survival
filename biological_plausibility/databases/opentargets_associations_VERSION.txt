@@ -1,0 +1,4 @@
+Generated: 2025-12-03 13:38:31
+Source: Open Targets Platform GraphQL API
+Description: gene-disease associations for TCGA cancer types (first page up to 2500 targets per disease)
+URL: https://api.platform.opentargets.org/api/v4/graphql

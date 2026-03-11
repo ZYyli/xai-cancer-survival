@@ -1,0 +1,39 @@
+# 忽略所有数据文件
+datasets_csv/
+*.zip
+*.gz
+ARGO_RNA/
+splits/
+splits_1/
+
+# 忽略所有的实验结果文件夹
+*_results/
+*_results_2/
+*_results_300/
+*_results_500/
+results_*/
+results_1/
+results_2/
+results_bootstrap*/
+stability*/
+
+# 忽略绘图结果
+*_plots/
+*_plots_1/
+bootstrap_boxplot*/
+explainability_comparison_plots_300
+
+# 忽略 Python 缓存
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+#other files
+ablation_study_LGG_final/
+other/
+operation/*_output_*
+operation/*_output
+
+biological_plausibility/database/
+biological_plausibility/outputs/
+biological_plausibility/*output
