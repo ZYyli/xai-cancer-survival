@@ -1311,7 +1311,7 @@ def main():
     args = parser.parse_args()
     
     # 设置XAI方法和癌症类型
-    xai_methods = ['shap', 'IG', 'LRP', 'PFI', 'deepshap', 'DeepLIFT']  # deepshap可能失败率高，谨慎添加
+    xai_methods = ['shap', 'IG', 'LRP', 'PFI', 'deepshap', 'DeepLIFT']
     cancer_types = [
         'BLCA', 'BRCA', 'COADREAD', 'GBMLGG', 'HNSC', 'KIRC',
         'KIRP', 'LGG', 'LIHC', 'LUAD', 'LUSC', 'PAAD', 'SKCM', 'STAD', 'UCEC'
