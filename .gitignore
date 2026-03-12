@@ -1,10 +1,13 @@
 # 忽略所有数据文件
-datasets_csv/
+datasets_csv/*
 *.zip
 *.gz
 ARGO_RNA/
 splits/
 splits_1/
+
+# 但不要忽略里面的 Python 脚本
+!datasets_csv/*.py
 
 # 忽略所有的实验结果文件夹
 *_results/
