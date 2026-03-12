@@ -36,6 +36,7 @@ ablation_study_LGG_final/
 other/
 operation/*_output_*
 operation/*_output
+requirements_full.txt
 
 biological_plausibility/database/
 biological_plausibility/outputs/
