@@ -42,7 +42,7 @@ operation/command
 
 requirements_full.txt
 
-biological_plausibility/database/
+biological_plausibility/databases/
 biological_plausibility/outputs/
 biological_plausibility/*output
 biological_plausibility/*.md

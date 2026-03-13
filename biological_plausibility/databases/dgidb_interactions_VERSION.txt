@@ -1,4 +1,0 @@
-Generated: 2025-12-03 13:37:39
-Source: local template (DGIdb manual download required)
-Description: contains common FDA-approved targeted agents only, please replace with full DGIdb interactions.tsv
-Manual action: download interactions.tsv from https://dgidb.org/downloads and overwrite this file
