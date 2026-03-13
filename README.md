@@ -1,5 +1,4 @@
 # XAI-Cancer-Survival
-[![DOI](https://zenodo.org/badge/1178863917.svg)](https://doi.org/10.5281/zenodo.18984043)
 A Systematic Evaluation Framework for Explainable AI (XAI) in Deep Learning-based Cancer Survival Prediction
 
 ### 📖 Introduction
