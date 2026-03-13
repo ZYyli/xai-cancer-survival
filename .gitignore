@@ -37,6 +37,7 @@ other/
 operation/*_output_*
 operation/*_output
 operation/read_pkl.py
+operation/generate_consensus_thresh70.py
 operation/*.md
 operation/command
 
