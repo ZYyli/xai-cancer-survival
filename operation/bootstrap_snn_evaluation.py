@@ -23,6 +23,7 @@ from model_genomic import SNN
 import numpy as np
 from argparse import Namespace
 import pandas as pd
+from pathlib import Path
 
 from multiprocessing import Process
 import multiprocessing as mp
@@ -34,7 +35,8 @@ from sksurv.metrics import concordance_index_censored  # returns (cindex, concor
 # ---------------------------
 B_DEFAULT = 500 #500次boostrap
 N_JOBS = 1  # 并行 worker 数量（根据你机器 CPU/GPU 调整）
-OUTPUT_ROOT = "/home/zuoyiyi/SNN/TCGA/results_bootstrap_500"
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
+OUTPUT_ROOT = str(Path(os.environ.get('OUTPUT_ROOT', str(TCGA_DIR / 'results_bootstrap_500'))).resolve())
 RNG_SEED = 1
 
 # ========== 文件保存配置 - 精简版 ==========
@@ -136,7 +138,7 @@ def fit_snn_on_bootstrap(D_boot, seed=None, save_model_path=None, device='cuda:0
         max_epochs=33,
         gc=32,
         alpha_surv=0.0,
-        results_dir=f"/home/zuoyiyi/SNN/TCGA/results_bootstrap/tmp_{cancer_name}_seed{seed}_gpu{device.split(':')[1]}",  # 每个癌症+seed+GPU独立目录
+        results_dir=str(Path(OUTPUT_ROOT) / f"tmp_{cancer_name}_seed{seed}_gpu{device.split(':')[1]}"),  # 每个癌症+seed+GPU独立目录
         log_data=False,
         early_stopping=True,
         seed=seed
@@ -470,11 +472,11 @@ def run_bootstrap_for_cancer(cancer_name, D_df, B, n_jobs=1, output_root=OUTPUT_
     # 最终清理：删除所有该癌种的临时训练目录
     import shutil
     import glob
-    temp_pattern = f"/home/zuoyiyi/SNN/TCGA/results_bootstrap/tmp_{cancer_name}_seed*_gpu*"
+    temp_pattern = str(Path(OUTPUT_ROOT) / f"tmp_{cancer_name}_seed*_gpu*")
     try:
         temp_dirs = glob.glob(temp_pattern)
         for temp_dir in temp_dirs:
-            if os.path.exists(temp_dir):
+            if os.path.isdir(temp_dir):
                 shutil.rmtree(temp_dir)
         if temp_dirs:
             print(f"🧹 已清理 {len(temp_dirs)} 个临时训练目录")
@@ -553,7 +555,7 @@ if __name__ == "__main__":
 
     # --------- TODO: 在这里加载你的 15 个癌种数据集到 cancer_dfs ----------
     # 假设你把每个癌种CSV放在 data_root/<cancer>.csv
-    data_root = "/home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_cancer_single"
+    data_root = str(Path(os.environ.get('DATA_ROOT', str(TCGA_DIR / 'datasets_csv' / 'preprocess_cancer_single'))).resolve())
     for fname in os.listdir(data_root):
         if fname.endswith(".csv"):
             cname = fname.replace("_preprocessed.csv","")

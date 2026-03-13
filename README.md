@@ -27,4 +27,5 @@ biological_plausibility/: Scripts for biological functional validation and visua
 Ensure you have Python installed, then install the required dependencies:
 `pip install -r requirements.txt`
 2. Execution commands
+`export TCGA_DIR=/path/to/TCGA`
 All scripts can be executed using the commands listed in `command.sh`

@@ -1,5 +1,6 @@
 import os
 from os.path import join
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from sklearn.pipeline import Pipeline
@@ -7,6 +8,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from scipy import stats
+
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
 
 def add_bins(slide_data, label_col, n_bins, eps):
     """
@@ -165,7 +168,7 @@ def process_cancer_single(cancer, data_root, mad_dir, output_dir, label_col, top
 if __name__ == "__main__":
     # 参数配置
     cancer_types = ['BLCA', 'BRCA', 'COADREAD', 'GBMLGG', 'HNSC', 'KIRC', 'KIRP', 'LGG', 'LIHC', 'LUAD', 'LUSC', 'PAAD', 'SKCM', 'STAD', 'UCEC']
-    data_root = '/home/zuoyiyi/SNN/TCGA/datasets_csv'
+    data_root = str(Path(os.environ.get('DATA_ROOT', str(TCGA_DIR / 'datasets_csv'))).resolve())
     label_col = 'survival_months'
     top_k = 2000
     eps = 1e-6

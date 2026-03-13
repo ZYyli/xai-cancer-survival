@@ -7,10 +7,14 @@
 """
 
 import os
-import pandas as pd
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from scipy import stats
-import itertools
+from scipy.stats import rankdata
+from itertools import combinations
+from pathlib import Path
 from collections import Counter, defaultdict
 import warnings
 warnings.filterwarnings('ignore')
@@ -1217,11 +1221,15 @@ class FeatureStabilityAnalyzer:
 def main():
     """主函数"""
     import argparse
+
+    TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
     
     parser = argparse.ArgumentParser(description="特征重要性稳定性分析")
-    parser.add_argument('--results_dir', type=str, default='/home/zuoyiyi/SNN/TCGA', 
+    parser.add_argument('--results_dir', type=str,
+                       default=str(TCGA_DIR),
                        help='结果根目录（包含各xai方法各癌症的feature_importance子目录）')
-    parser.add_argument('--output_dir', type=str, default='/home/zuoyiyi/SNN/TCGA/stability_analysis', 
+    parser.add_argument('--output_dir', type=str,
+                       default=str(TCGA_DIR / 'stability_analysis'),
                        help='稳定性分析结果输出目录')
     args = parser.parse_args()
     

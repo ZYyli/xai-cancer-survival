@@ -4,10 +4,13 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pathlib import Path
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
 from sksurv.metrics import cumulative_dynamic_auc
 import math
+
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
 
 # 癌症类型缩写列表
 CANCER_TYPES = [
@@ -16,8 +19,10 @@ CANCER_TYPES = [
     'SKCM', 'STAD', 'UCEC'
 ]
 
-def load_nested_cv_results(results_dir='/home/zuoyiyi/SNN/TCGA/results_2', n_repeats=10, n_folds=5):
+def load_nested_cv_results(results_dir=None, n_repeats=10, n_folds=5):
     """加载所有癌症类型的nested CV results文件"""
+    if results_dir is None:
+        results_dir = str(Path(os.environ.get('RESULTS_DIR', str(TCGA_DIR / 'results_2'))).resolve())
     all_data = []
     
     # 遍历每种癌症类型
@@ -232,12 +237,12 @@ def plot_integrated_survival_curve(data, cancer_type, save_dir):
     2. 所有预测都基于外层测试集（未参与训练）
     3. 避免重复患者影响分组
     
-    参数:
+    参数：
     - data: 包含所有repeat-fold数据的DataFrame
     - cancer_type: 癌症类型
     - save_dir: 保存目录
     
-    返回:
+    返回：
     - logrank_p: Log-rank检验P值
     """
     # 对每个患者的10次重复预测取平均
@@ -374,8 +379,10 @@ def plot_integrated_survival_curve(data, cancer_type, save_dir):
     return logrank_p
 
 
-def load_cindex_data_nested_cv(root_folder='/home/zuoyiyi/SNN/TCGA/results_2'):
+def load_cindex_data_nested_cv(root_folder=None):
     """加载nested CV的C-index数据"""
+    if root_folder is None:
+        root_folder = str(Path(os.environ.get('RESULTS_DIR', str(TCGA_DIR / 'results_2'))).resolve())
     cindex_data = []
     
     for cancer_folder in os.listdir(root_folder):
@@ -404,14 +411,14 @@ def fold_level_analysis(data, cancer_type, cindex_data=None, n_repeats=10, n_fol
     """
     Fold级别分析：计算每个fold的C-index和AUC
     
-    参数:
+    参数：
     - data: 包含所有repeat-fold数据的DataFrame
     - cancer_type: 癌症类型
     - cindex_data: 预加载的C-index数据（可选），如果提供则直接使用而不重新计算
     - n_repeats: 重复次数，默认10
     - n_folds: 折数，默认5
     
-    返回:
+    返回：
     - fold_results: DataFrame，包含每个fold的分析结果
     """
     fold_results = []
@@ -467,13 +474,13 @@ def bootstrap_ci(data, n_bootstrap=1000, alpha=0.05, random_seed=42):
     - 不需要假设数据分布，适合小样本（n=50）
     - 给出的是总体均值的置信区间（而非预测区间）
     
-    参数:
+    参数：
     - data: 数据列表或数组（如50个C-index值）
     - n_bootstrap: Bootstrap重采样次数，默认10000
     - alpha: 显著性水平，默认0.05（对应95%置信区间）
     - random_seed: 随机种子，确保可重复性
     
-    返回:
+    返回：
     - (ci_lower, ci_upper): 置信区间下界和上界
     """
     data = np.array(data)
@@ -506,12 +513,12 @@ def cindex_ci_nested_cv(data, alpha=0.05, n_bootstrap=10000):
     - Bootstrap CI：总体均值有95%概率在此区间（更窄，约为分位数法的1/7）
     - 分位数法：新实验的值有95%概率在此区间（更宽，实际是预测区间）
     
-    参数:
+    参数：
     - data: DataFrame，包含'Cancer_Type', 'Concordance Index', 'repeat', 'fold'列
     - alpha: 置信水平，默认为0.05（对应95%置信区间）
     - n_bootstrap: Bootstrap重采样次数，默认10000
     
-    返回:
+    返回：
     - 字典，格式为 {癌症类型: (置信区间下限, 置信区间上限)}
     """
     # 按癌症类型分组
@@ -551,10 +558,10 @@ def test_cindex_vs_random(combined_df):
     对每种癌症的C-index进行单样本t检验，检验是否显著大于0.5（随机水平）
     使用FDR（Benjamini-Hochberg方法）进行多重检验校正
     
-    参数:
+    参数：
     - combined_df: 包含所有癌症C-index数据的DataFrame
     
-    返回:
+    返回：
     - ttest_results: 字典，格式为 {癌症类型: (t_stat, p_raw, mean_c, std_c, n, p_fdr, sig_fdr)}
     """
     from scipy import stats
@@ -648,11 +655,11 @@ def plot_overall_average_auc_all_cancers(all_data, save_dir):
     - 适合论文中的整体性能总结
     - 每个时间点标注参与计算的癌症/fold数量
     
-    参数:
+    参数：
     - all_data: 包含所有癌症数据的DataFrame
     - save_dir: 保存目录
     
-    返回:
+    返回：
     - overall_mean_auc: 整体平均AUC值
     """
     print("\n=== 计算泛癌种整体平均AUC曲线 ===")
@@ -782,7 +789,7 @@ def draw_cindex_boxplot_with_stars_nested_cv(all_fold_results, output_dir):
     绘制C-index箱线图并标注显著性星号
     - 黑色星号（箱线图上方）: C-index vs 0.5（随机水平）的t检验显著性（FDR校正）
     
-    参数:
+    参数：
     - all_fold_results: 所有癌症的fold级别分析结果字典 {cancer_type: fold_results_df}
     - output_dir: 输出目录
     """
@@ -927,8 +934,8 @@ def draw_cindex_boxplot_with_stars_nested_cv(all_fold_results, output_dir):
         print(f"✅ t检验结果已保存至: {ttest_file}")
 
 def main():
-    output_dir = "/home/zuoyiyi/SNN/TCGA/results_nested_cv_plots_1"
-    
+    output_dir = str(Path(os.environ.get('OUTPUT_DIR', str(TCGA_DIR / 'results_nested_cv_plots_1'))).resolve())
+
     print("=" * 80)
     print("Nested CV (10 repeats × 5 folds) 生存分析评估")
     print("=" * 80)

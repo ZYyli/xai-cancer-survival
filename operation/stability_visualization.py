@@ -18,11 +18,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from matplotlib.colors import LinearSegmentedColormap
-from scipy.stats import friedmanchisquare, wilcoxon, rankdata
+import warnings
+from scipy import stats
+from scipy.stats import rankdata
 from statsmodels.stats.multitest import multipletests
 from itertools import combinations
-import warnings
+from matplotlib.colors import LinearSegmentedColormap
+from pathlib import Path
 warnings.filterwarnings('ignore')
 
 # 设置绘图风格
@@ -1248,13 +1250,15 @@ class StabilityVisualizer:
 def main():
     """主函数"""
     import argparse
+
+    TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
     
     parser = argparse.ArgumentParser(description="特征稳定性可视化")
     parser.add_argument('--data_dir', type=str, 
-                       default='/home/zuoyiyi/SNN/TCGA/stability_analysis_4',
+                       default=str(TCGA_DIR / 'stability_analysis_4'),
                        help='稳定性分析数据目录')
     parser.add_argument('--output_dir', type=str,
-                       default='/home/zuoyiyi/SNN/TCGA/stability_comparison_plots_nestedcv/visualization',
+                       default=str(TCGA_DIR / 'stability_comparison_plots_nestedcv' / 'visualization'),
                        help='图表输出目录（默认为data_dir/figures）')
     parser.add_argument('--top_k', type=int, default=100,
                        help='用于箱线图和热力图的Top-k值')

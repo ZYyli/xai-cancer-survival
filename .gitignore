@@ -36,8 +36,14 @@ ablation_study_LGG_final/
 other/
 operation/*_output_*
 operation/*_output
+operation/read_pkl.py
+operation/*.md
+operation/command
+
 requirements_full.txt
 
 biological_plausibility/database/
 biological_plausibility/outputs/
 biological_plausibility/*output
+biological_plausibility/*.md
+

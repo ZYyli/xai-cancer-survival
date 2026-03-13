@@ -12,6 +12,7 @@ import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 from scipy import stats
 from typing import Optional, Dict, Set
+from pathlib import Path
 
 # 核心设置：将 PDF 字体类型设为 42 (TrueType)，这样 AI 就能识别为文字
 plt.rcParams['pdf.fonttype'] = 42
@@ -27,18 +28,20 @@ plt.rcParams['font.size'] = 8
 CANCER_LIST = ['COADREAD', 'LUSC', 'HNSC', 'STAD', 'BLCA', 'BRCA', 'LUAD', 'PAAD',
     'LIHC', 'SKCM', 'KIRC', 'UCEC', 'KIRP', 'GBMLGG', 'LGG']
 
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
+
 # XAI方法配置: {stability_dir_name: (display_name, results_dir, feature_subdir, file_prefix)}
 XAI_METHODS = {
-    'shap': ('G-SHAP', '/home/zuoyiyi/SNN/TCGA/shap_bootstrap_results', 'shap_feature_importance', 'shap'),
-    'DeepLIFT': ('DeepLIFT', '/home/zuoyiyi/SNN/TCGA/DeepLIFT_bootstrap_results', 'deeplift_feature_importance', 'deeplift'),
-    'deepshap': ('D-SHAP', '/home/zuoyiyi/SNN/TCGA/deepshap_bootstrap_results', 'deepshap_feature_importance', 'deepshap'),
-    'IG': ('IG', '/home/zuoyiyi/SNN/TCGA/IG_bootstrap_results', 'ig_feature_importance', 'ig'),
-    'LRP': ('LRP', '/home/zuoyiyi/SNN/TCGA/LRP_bootstrap_results', 'lrp_feature_importance', 'lrp'),
-    'PFI': ('PFI', '/home/zuoyiyi/SNN/TCGA/PFI_bootstrap_results', 'pfi_feature_importance', 'pfi')
+    'shap': ('G-SHAP', str(TCGA_DIR / 'shap_bootstrap_results'), 'shap_feature_importance', 'shap'),
+    'DeepLIFT': ('DeepLIFT', str(TCGA_DIR / 'DeepLIFT_bootstrap_results'), 'deeplift_feature_importance', 'deeplift'),
+    'deepshap': ('D-SHAP', str(TCGA_DIR / 'deepshap_bootstrap_results'), 'deepshap_feature_importance', 'deepshap'),
+    'IG': ('IG', str(TCGA_DIR / 'IG_bootstrap_results'), 'ig_feature_importance', 'ig'),
+    'LRP': ('LRP', str(TCGA_DIR / 'LRP_bootstrap_results'), 'lrp_feature_importance', 'lrp'),
+    'PFI': ('PFI', str(TCGA_DIR / 'PFI_bootstrap_results'), 'pfi_feature_importance', 'pfi')
 }
 
-STABILITY_DIR = "/home/zuoyiyi/SNN/TCGA/stability_analysis_bootstrap"
-OUTPUT_DIR = "/home/zuoyiyi/SNN/TCGA/stability_comparison_plots"
+STABILITY_DIR = str(Path(os.environ.get('STABILITY_DIR', str(TCGA_DIR / 'stability_analysis_bootstrap'))).resolve())
+OUTPUT_DIR = str(Path(os.environ.get('OUTPUT_DIR', str(TCGA_DIR / 'stability_comparison_plots'))).resolve())
 
 TOP_K = 100
 
@@ -278,7 +281,7 @@ def compute_kuncheva_correlation_data():
         
         for i, cancer in enumerate(CANCER_LIST):
             # 构建 ranking 文件目录路径
-            # 例如: /home/zuoyiyi/SNN/TCGA/DeepLIFT_bootstrap_results/BLCA/deeplift_feature_importance/
+            # 例如: /DeepLIFT_bootstrap_results/BLCA/deeplift_feature_importance/
             ranking_dir = os.path.join(results_dir, cancer, feature_subdir)
             
             if not os.path.exists(ranking_dir):
@@ -313,7 +316,7 @@ def compute_kuncheva_correlation_data():
                         rankings[seed] = set(df_rank.head(TOP_K)['feature_name'].tolist())
                 
                 # 读取 C-index 数据
-                cindex_file = f"/home/zuoyiyi/SNN/TCGA/results_bootstrap/{cancer}/cindex_array.npy"
+                cindex_file = str(TCGA_DIR / 'results_bootstrap' / cancer / 'cindex_array.npy')
                 if os.path.exists(cindex_file):
                     cindex_arr = np.load(cindex_file)
                     for seed in rankings.keys():

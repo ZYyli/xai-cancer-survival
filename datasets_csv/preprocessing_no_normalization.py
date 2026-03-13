@@ -1,5 +1,6 @@
 import os
 from os.path import join
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from sklearn.pipeline import Pipeline
@@ -8,6 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from split import generate_survival_five_fold_split
 import matplotlib.pyplot as plt
 from scipy import stats
+
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
 
 def add_bins(slide_data, label_col):
     #用于检查输入的数据框 slide_data 是否包含 'case_id'（患者ID）和 'censorship'（删失信息）这两列
@@ -212,8 +215,8 @@ def process_cancer(cancer, data_root, split_root, mad_dir, output_dir, label_col
 if __name__ == "__main__":
     # 参数配置
     cancer_types = ['blca', 'brca', 'coadread', 'gbmlgg', 'hnsc', 'kirc', 'kirp', 'lgg', 'lihc', 'luad', 'lusc', 'paad', 'skcm', 'stad', 'ucec']
-    data_root = '/home/zuoyiyi/SNN/TCGA/datasets_csv'
-    split_root = '/home/zuoyiyi/SNN/TCGA/splits_1'
+    data_root = str(Path(os.environ.get('DATA_ROOT', str(TCGA_DIR / 'datasets_csv'))).resolve())
+    split_root = str(Path(os.environ.get('SPLIT_ROOT', str(TCGA_DIR / 'splits_1'))).resolve())
     label_col = 'survival_months'
     top_k = 2000
     eps = 1e-6

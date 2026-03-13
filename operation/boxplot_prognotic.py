@@ -7,6 +7,7 @@ from scipy.stats import friedmanchisquare, wilcoxon, rankdata
 from statsmodels.stats.multitest import multipletests
 from itertools import combinations
 from matplotlib.colors import LinearSegmentedColormap
+from pathlib import Path
 
 # 核心设置：将 PDF 字体类型设为 42 (TrueType)，这样 AI 就能识别为文字
 plt.rcParams['pdf.fonttype'] = 42
@@ -92,19 +93,21 @@ cancer_list = [
     'LIHC', 'SKCM', 'KIRC', 'UCEC', 'KIRP', 'GBMLGG', 'LGG'
 ]
 
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
+
 
 methods_dirs = {
-    'G-SHAP': "/home/zuoyiyi/SNN/TCGA/shap_results_2",
-    'IG': "/home/zuoyiyi/SNN/TCGA/IG_results_2",
-    'LRP': "/home/zuoyiyi/SNN/TCGA/LRP_results_2",
-    'PFI': "/home/zuoyiyi/SNN/TCGA/PFI_results_2",
-    'D-SHAP': "/home/zuoyiyi/SNN/TCGA/deepshap_results_2",
-    'DeepLIFT': "/home/zuoyiyi/SNN/TCGA/DeepLIFT_results_2"
+    'G-SHAP': str(TCGA_DIR / 'shap_results_2'),
+    'IG': str(TCGA_DIR / 'IG_results_2'),
+    'LRP': str(TCGA_DIR / 'LRP_results_2'),
+    'PFI': str(TCGA_DIR / 'PFI_results_2'),
+    'D-SHAP': str(TCGA_DIR / 'deepshap_results_2'),
+    'DeepLIFT': str(TCGA_DIR / 'DeepLIFT_results_2')
 }
 
 col_name = 'cox_prognostic_factors_raw'
 
-output_dir = "/home/zuoyiyi/SNN/TCGA/Prognostic_comparison_plots"
+output_dir = str(TCGA_DIR / 'Prognostic_comparison_plots')
 os.makedirs(output_dir, exist_ok=True)
 
 # ============================================================================

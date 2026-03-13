@@ -16,6 +16,7 @@ from matplotlib.lines import Line2D
 import matplotlib.patches as mpatches
 import seaborn as sns
 from scipy import stats
+from pathlib import Path
 
 # 核心设置：将 PDF 字体类型设为 42 (TrueType)，这样 AI 就能识别为文字
 plt.rcParams['pdf.fonttype'] = 42
@@ -31,16 +32,18 @@ plt.rcParams['font.size'] = 8
 CANCER_LIST = ['COADREAD', 'LUSC', 'HNSC', 'STAD', 'BLCA', 'BRCA', 'LUAD', 'PAAD',
     'LIHC', 'SKCM', 'KIRC', 'UCEC', 'KIRP', 'GBMLGG', 'LGG']
 
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
+
 XAI_METHODS = {
-    'LRP': "/home/zuoyiyi/SNN/TCGA/LRP_bootstrap_results",
-    'PFI': "/home/zuoyiyi/SNN/TCGA/PFI_bootstrap_results",
-    'IG': "/home/zuoyiyi/SNN/TCGA/IG_bootstrap_results",
-    'DeepLIFT': "/home/zuoyiyi/SNN/TCGA/DeepLIFT_bootstrap_results",
-    'G-SHAP': "/home/zuoyiyi/SNN/TCGA/shap_bootstrap_results",
-    'D-SHAP': "/home/zuoyiyi/SNN/TCGA/deepshap_bootstrap_results"
+    'LRP': str(TCGA_DIR / 'LRP_bootstrap_results'),
+    'PFI': str(TCGA_DIR / 'PFI_bootstrap_results'),
+    'IG': str(TCGA_DIR / 'IG_bootstrap_results'),
+    'DeepLIFT': str(TCGA_DIR / 'DeepLIFT_bootstrap_results'),
+    'G-SHAP': str(TCGA_DIR / 'shap_bootstrap_results'),
+    'D-SHAP': str(TCGA_DIR / 'deepshap_bootstrap_results')
 }
 
-OUTPUT_DIR = "/home/zuoyiyi/SNN/TCGA/Prognostic_comparison_plots"
+OUTPUT_DIR = str(Path(os.environ.get('OUTPUT_DIR', str(TCGA_DIR / 'Prognostic_comparison_plots'))).resolve())
 
 # ============================== 颜色配置 ==============================
 HEATMAP_COLORS = ["#43A8A8", "white", "#D75F5F"]

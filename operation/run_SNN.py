@@ -1,23 +1,34 @@
 import os
 import subprocess
+from pathlib import Path
+
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
+
+CSV_PATH = os.environ.get('CSV_PATH', str(TCGA_DIR / 'datasets_csv' / 'preprocess_1'))
+RESULTS_ROOT = os.environ.get('RESULTS_ROOT', str(TCGA_DIR / 'results_2'))
+
+CANCERS = [
+    ('BLCA', 'blca'),
+    ('BRCA', 'brca'),
+    ('COADREAD', 'coadread'),
+    ('GBMLGG', 'gbmlgg'),
+    ('HNSC', 'hnsc'),
+    ('KIRC', 'kirc'),
+    ('KIRP', 'kirp'),
+    ('LGG', 'lgg'),
+    ('LIHC', 'lihc'),
+    ('LUAD', 'luad'),
+    ('LUSC', 'lusc'),
+    ('PAAD', 'paad'),
+    ('SKCM', 'skcm'),
+    ('STAD', 'stad'),
+    ('UCEC', 'ucec'),
+]
 
 # 定义命令列表
 commands = [
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/BLCA --cancer blca --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/BRCA --cancer brca --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/COADREAD --cancer coadread --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/GBMLGG --cancer gbmlgg --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/HNSC --cancer hnsc --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/KIRC --cancer kirc --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/KIRP --cancer kirp --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/LGG --cancer lgg --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/LIHC --cancer lihc --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/LUAD --cancer luad --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/LUSC --cancer lusc --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/PAAD --cancer paad --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/SKCM --cancer skcm --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/STAD --cancer stad --keep_logs",
-    "python main.py --csv_path /home/zuoyiyi/SNN/TCGA/datasets_csv/preprocess_1 --results_dir /home/zuoyiyi/SNN/TCGA/results_2/UCEC --cancer ucec --keep_logs"
+    f"python main.py --csv_path {CSV_PATH} --results_dir {Path(RESULTS_ROOT) / cancer_dir} --cancer {cancer_arg} --keep_logs"
+    for cancer_dir, cancer_arg in CANCERS
 ]
 
 # 遍历执行命令

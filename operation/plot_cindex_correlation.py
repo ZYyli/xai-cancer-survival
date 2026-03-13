@@ -3,10 +3,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 from scipy.stats import pearsonr, spearmanr
+from pathlib import Path
 
 # ====== 参数 ======
-input_file = "/home/zuoyiyi/SNN/TCGA/operation/cindex_factors.csv"
-out_dir = "/home/zuoyiyi/SNN/TCGA/correlation"
+TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
+input_file = os.environ.get('INPUT_FILE', str(TCGA_DIR / 'operation' / 'cindex_factors.csv'))
+out_dir = os.environ.get('OUT_DIR', str(TCGA_DIR / 'correlation'))
 os.makedirs(out_dir, exist_ok=True)
 corr_method = "pearson"  # "pearson" 或 "spearman"
 
