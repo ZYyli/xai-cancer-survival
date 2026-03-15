@@ -10,6 +10,14 @@ from lifelines.statistics import logrank_test
 from sksurv.metrics import cumulative_dynamic_auc
 import math
 
+# 核心设置：将 PDF 字体类型设为 42 (TrueType)，这样 AI 就能识别为文字
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['ps.fonttype'] = 42
+
+# 可选：强制使用 Arial 字体（BBRC 推荐）
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.sans-serif'] = ['Arial']
+
 TCGA_DIR = Path(os.environ.get('TCGA_DIR', Path(__file__).resolve().parents[1])).resolve()
 
 # 癌症类型缩写列表
@@ -94,12 +102,72 @@ def compute_dynamic_auc_single(data, times):
     except:
         return None
 
-def format_pvalue(p, threshold=1e-4, decimals=2):
-    """格式化P值为科学计数法或保留4位小数"""
-    if p < threshold:
-        return f"{p:.{decimals}e}"
+def format_pvalue(p):
+    """格式化p值显示"""
+    if p < 0.001:
+        return "<0.001"
+    elif p < 0.01:
+        return "<0.01"
+    elif p < 0.05:
+        return "<0.05"
     else:
-        return f"{p:.4f}"
+        return f"{p:.3f}"
+
+def _pvalue_to_stars(p):
+    if p is None or np.isnan(p):
+        return ''
+    if p < 0.001:
+        return '***'
+    if p < 0.01:
+        return '**'
+    if p < 0.05:
+        return '*'
+    return ''
+
+def load_km_logrank_significance(output_dir, alpha=0.05):
+    """从汇总表中读取每癌种整合KM曲线的log-rank p值，并做FDR校正"""
+    summary_file = os.path.join(output_dir, 'all_cancers_fold_analysis_summary.csv')
+    if not os.path.exists(summary_file):
+        return {}
+
+    summary_df = pd.read_csv(summary_file)
+    if 'cancer_type' not in summary_df.columns or 'integrated_logrank_p' not in summary_df.columns:
+        return {}
+
+    p_raw_map = {}
+    for _, row in summary_df.iterrows():
+        cancer = row['cancer_type']
+        try:
+            p_raw = float(row['integrated_logrank_p'])
+        except Exception:
+            p_raw = np.nan
+        p_raw_map[cancer] = p_raw
+
+    cancers = [c for c in CANCER_TYPES if c in p_raw_map and not np.isnan(p_raw_map[c])]
+    if not cancers:
+        return {c: {'p_value_raw': p_raw_map.get(c, np.nan), 'p_value_fdr': np.nan, 'significance': ''} for c in CANCER_TYPES}
+
+    pvals = [p_raw_map[c] for c in cancers]
+    p_fdr_map = {c: np.nan for c in CANCER_TYPES}
+    try:
+        from statsmodels.stats.multitest import multipletests
+        _, pvals_fdr, _, _ = multipletests(pvals, alpha=alpha, method='fdr_bh')
+        for c, p_fdr in zip(cancers, pvals_fdr):
+            p_fdr_map[c] = float(p_fdr)
+    except Exception:
+        for c in cancers:
+            p_fdr_map[c] = float(p_raw_map[c])
+
+    sig = {}
+    for c in CANCER_TYPES:
+        p_raw = p_raw_map.get(c, np.nan)
+        p_fdr = p_fdr_map.get(c, np.nan)
+        sig[c] = {
+            'p_value_raw': p_raw,
+            'p_value_fdr': p_fdr,
+            'significance': _pvalue_to_stars(p_raw),
+        }
+    return sig
 
 def compute_average_auc_curves_all_folds(data, n_repeats=10, n_folds=5):
     """
@@ -787,7 +855,7 @@ def plot_overall_average_auc_all_cancers(all_data, save_dir):
 def draw_cindex_boxplot_with_stars_nested_cv(all_fold_results, output_dir):
     """
     绘制C-index箱线图并标注显著性星号
-    - 黑色星号（箱线图上方）: C-index vs 0.5（随机水平）的t检验显著性（FDR校正）
+    - 黑色星号（箱线图上方）: 每癌种整合KM曲线（log-rank）原始p值显著性
     
     参数：
     - all_fold_results: 所有癌症的fold级别分析结果字典 {cancer_type: fold_results_df}
@@ -813,8 +881,8 @@ def draw_cindex_boxplot_with_stars_nested_cv(all_fold_results, output_dir):
         else:
             print(f"{cancer}: 数据不足，无法计算置信区间")
     
-    # C-index vs 0.5的统计检验
-    ttest_results = test_cindex_vs_random(combined_df)
+    # KM整合曲线的log-rank显著性（从汇总表读取）
+    km_sig = load_km_logrank_significance(output_dir)
 
     # 按平均C-index由低到高排序类别
     mean_cindex_per_cancer = (
@@ -826,7 +894,7 @@ def draw_cindex_boxplot_with_stars_nested_cv(all_fold_results, output_dir):
     sorted_categories = mean_cindex_per_cancer.index.tolist()
     
     # 绘制箱线图
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(5.6, 4))
     ax = sns.boxplot(
         x='Cancer_Type', 
         y='Concordance Index', 
@@ -863,30 +931,23 @@ def draw_cindex_boxplot_with_stars_nested_cv(all_fold_results, output_dir):
     # 扩大y轴范围以容纳上方标记
     ax.set_ylim(y_min, y_max + 0.05)
     
-    # 遍历每个癌症类型，标注C-index vs 0.5的显著性
+    # 遍历每个癌症类型，标注整合KM曲线（log-rank）的显著性
     for i, cancer_type in enumerate(sorted_categories):
         x_pos = i
-        
-        # C-index vs 0.5的显著性（黑色，使用FDR校正结果）
-        if cancer_type in ttest_results:
-            result = ttest_results[cancer_type]
-            if len(result) >= 7:  # 确保有FDR校正结果
-                sig_fdr = result[6]  # FDR显著性标记
-                
-                if sig_fdr:  # 只标注显著的
-                    # 获取箱线图顶部位置
-                    boxprops = ax.artists[i].get_bbox() if i < len(ax.artists) else None
-                    if boxprops:
-                        y_max_box = boxprops.y1
-                    else:
-                        group_data = combined_df[combined_df['Cancer_Type'] == cancer_type]['Concordance Index']
-                        y_max_box = group_data.max() if not group_data.empty else 0.8
-                    
-                    star_y_upper = y_max_box + 0.015
-                    
-                    ax.text(x_pos, star_y_upper, sig_fdr, 
-                            ha='center', va='bottom', 
-                            fontsize=12, fontweight='bold', color='black')
+
+        sig_stars = km_sig.get(cancer_type, {}).get('significance', '')
+        if sig_stars:
+            boxprops = ax.artists[i].get_bbox() if i < len(ax.artists) else None
+            if boxprops:
+                y_max_box = boxprops.y1
+            else:
+                group_data = combined_df[combined_df['Cancer_Type'] == cancer_type]['Concordance Index']
+                y_max_box = group_data.max() if not group_data.empty else 0.8
+
+            star_y_upper = y_max_box + 0.015
+            ax.text(x_pos, star_y_upper, sig_stars,
+                    ha='center', va='bottom',
+                    fontsize=12, fontweight='bold', color='black')
     
     # 标题和坐标轴
     plt.title('Concordance Index Distribution for Different Cancers (Nested CV)', 
@@ -903,35 +964,27 @@ def draw_cindex_boxplot_with_stars_nested_cv(all_fold_results, output_dir):
     
     # 保存箱线图
     os.makedirs(output_dir, exist_ok=True)
-    plt.savefig(os.path.join(output_dir, 'nested_cv_cindex_boxplot.png'), dpi=300, bbox_inches="tight", transparent=True)
+    plt.savefig(os.path.join(output_dir, 'nested_cv_cindex_boxplot.png'), dpi=360, bbox_inches="tight", transparent=True)
     plt.savefig(os.path.join(output_dir, 'nested_cv_cindex_boxplot.tiff'), dpi=600, bbox_inches="tight")
-    plt.savefig(os.path.join(output_dir, 'nested_cv_cindex_boxplot.pdf'), dpi=300, bbox_inches="tight")
+    plt.savefig(os.path.join(output_dir, 'nested_cv_cindex_boxplot.pdf'), dpi=600, bbox_inches="tight")
     plt.close()
     
-    # 保存t检验结果到CSV
-    print("\n=== 保存t检验结果 ===")
-    ttest_summary = []
+    print("\n=== 保存KM log-rank显著性结果 ===")
+    km_summary = []
     for cancer_type in CANCER_TYPES:
-        if cancer_type in ttest_results:
-            result = ttest_results[cancer_type]
-            if len(result) >= 7:
-                t_stat, p_raw, mean_c, std_c, n, p_fdr, sig_fdr = result
-                ttest_summary.append({
-                    'cancer_type': cancer_type,
-                    'n_values': n,
-                    'mean_cindex': mean_c,
-                    'std_cindex': std_c,
-                    't_statistic': t_stat,
-                    'p_value_raw': p_raw,
-                    'p_value_fdr': p_fdr,
-                    'significance': sig_fdr
-                })
-    
-    if ttest_summary:
-        ttest_df = pd.DataFrame(ttest_summary)
-        ttest_file = os.path.join(output_dir, 'cindex_vs_random_ttest_results.csv')
-        ttest_df.to_csv(ttest_file, index=False)
-        print(f"✅ t检验结果已保存至: {ttest_file}")
+        if cancer_type in km_sig:
+            km_summary.append({
+                'cancer_type': cancer_type,
+                'integrated_logrank_p_raw': km_sig[cancer_type].get('p_value_raw', np.nan),
+                'integrated_logrank_p_fdr': km_sig[cancer_type].get('p_value_fdr', np.nan),
+                'significance': km_sig[cancer_type].get('significance', ''),
+            })
+
+    if km_summary:
+        km_df = pd.DataFrame(km_summary)
+        km_file = os.path.join(output_dir, 'km_logrank_significance_results.csv')
+        km_df.to_csv(km_file, index=False)
+        print(f"✅ KM log-rank结果已保存至: {km_file}")
 
 def main():
     output_dir = str(Path(os.environ.get('OUTPUT_DIR', str(TCGA_DIR / 'results_nested_cv_plots_1'))).resolve())
@@ -1065,7 +1118,7 @@ def main():
 
     # 绘制带星号的 C-index 箱线图
     print("\n" + "=" * 80)
-    print("绘制C-index箱线图（使用fold级别的显著性）")
+    print("绘制C-index箱线图（星号为整合KM曲线log-rank显著性）")
     print("=" * 80)
     draw_cindex_boxplot_with_stars_nested_cv(all_fold_results, output_dir)
 
@@ -1088,7 +1141,7 @@ def main():
     print("\n📋 输出文件清单:")
     print(f"  【汇总结果】")
     print(f"  • all_cancers_fold_analysis_summary.csv - 总体汇总")
-    print(f"  • cindex_vs_random_ttest_results.csv - C-index统计检验结果")
+    print(f"  • km_logrank_significance_results.csv - KM log-rank统计检验结果")
     print(f"  • nested_cv_cindex_boxplot.png/pdf/tiff - ⭐ C-index箱线图（带显著性标记）")
     print(f"  • overall_average_auc_all_cancers.png - ⭐⭐ 泛癌种整体平均AUC曲线（新增）")
     print(f"  • overall_average_auc_details.csv - 整体AUC曲线详细数据")
