@@ -6,7 +6,7 @@ This project provides a systematic evaluation framework to assess the performanc
 
 ### 🔄 Workflow
 An overview of the proposed XAI evaluation framework. Transcriptomic and clinical data from TCGA are used to train SNN models. Multiple XAI methods are applied to derive feature importance, followed by systematic evaluation from biological plausibility, prognostic significance, and stability.
-![Workflow](./figures/workflow.png)
+![Workflow](./figures/fig1_workflow.jpg)
 *Figure 1. Overview of the proposed XAI evaluation framework.*
 
 ### 🧪 Core Features
