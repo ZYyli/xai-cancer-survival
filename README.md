@@ -4,6 +4,11 @@ A Systematic Evaluation Framework for Explainable AI (XAI) in Deep Learning-base
 ### 📖 Introduction
 This project provides a systematic evaluation framework to assess the performance of various Explainable AI (XAI) methods within the context of cancer survival prediction. Utilizing transcriptome data from 15 major cancer types in The Cancer Genome Atlas (TCGA), we constructed Self-Normalizing Neural Network (SNN) models and performed a comparative analysis across six core XAI algorithms.
 
+### 🔄 Workflow
+An overview of the proposed XAI evaluation framework. Transcriptomic and clinical data from TCGA are used to train SNN models. Multiple XAI methods are applied to derive feature importance, followed by systematic evaluation from biological plausibility, prognostic significance, and stability.
+![Workflow](./figures/workflow.png)
+*Figure 1. Overview of the proposed XAI evaluation framework.*
+
 ### 🧪 Core Features
 15 Cancer Types: 'COADREAD', 'LUSC', 'HNSC', 'STAD', 'BLCA', 'BRCA', 'LUAD', 'PAAD', 'LIHC', 'SKCM', 'KIRC', 'UCEC', 'KIRP', 'GBMLGG', 'LGG'.  
 
